@@ -44,7 +44,7 @@ namespace SampleNotify
 
             var notification = new AppNotification(toastXmlString);
             AppNotificationManager.Default.Show(notification);
-             
+
         }
 
         private void myButton_Click(object sender, RoutedEventArgs e)
