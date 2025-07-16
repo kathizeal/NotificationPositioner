@@ -4,12 +4,164 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:SampleNotify"
+    xmlns:vm="using:SampleNotify.ViewModels"
+    xmlns:models="using:SampleNotify.Models"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="SampleNotify">
+    Title="Notification Manager - Control App Notifications">
 
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Button x:Name="myButton" Click="myButton_Click">Click Me</Button>
-    </StackPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{ThemeResource AccentFillColorDefaultBrush}" Padding="20,15">
+            <TextBlock Text="Notification Manager" 
+                       FontSize="24" 
+                       FontWeight="Bold" 
+                       Foreground="White"
+                       HorizontalAlignment="Center"/>
+        </Border>
+
+        <!-- Control Panel -->
+        <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}" Padding="20,15">
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" FlowDirection="LeftToRight">
+                <Button Content="Refresh Apps" 
+                        Command="{Binding RefreshApplicationsCommand}"
+                        Style="{StaticResource AccentButtonStyle}"/>
+                
+                <Button Content="Enable All" 
+                        Command="{Binding EnableAllNotificationsCommand}"/>
+                
+                <Button Content="Disable All" 
+                        Command="{Binding DisableAllNotificationsCommand}"/>
+                
+                <Button Content="Test Notification" 
+                        Click="TestNotificationButton_Click"
+                        Background="{ThemeResource SystemFillColorSuccessBrush}"
+                        Foreground="White"/>
+                
+                <ToggleButton Content="{Binding IsMonitoring, Converter={StaticResource MonitoringTextConverter}}"
+                              IsChecked="{Binding IsMonitoring, Mode=TwoWay}"
+                              Background="{ThemeResource SystemFillColorCautionBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Applications List -->
+        <ScrollViewer Grid.Row="2" Padding="20">
+            <ListView ItemsSource="{Binding Applications}" 
+                      SelectionMode="None">
+                <ListView.Header>
+                    <StackPanel>
+                        <TextBlock Text="Applications with Notifications" 
+                                   FontSize="18" 
+                                   FontWeight="SemiBold" 
+                                   Margin="0,0,0,10"/>
+                        <TextBlock Text="Click the toggle switch next to any application to enable/disable its notifications" 
+                                   FontSize="12" 
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Margin="0,0,0,15"/>
+                    </StackPanel>
+                </ListView.Header>
+                
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:ApplicationInfo">
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8"
+                                Padding="16"
+                                Margin="0,0,0,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- App Icon Placeholder -->
+                                <Border Grid.Column="0" 
+                                        Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                        Width="40" 
+                                        Height="40" 
+                                        CornerRadius="8"
+                                        Margin="0,0,16,0">
+                                    <FontIcon Glyph="&#xE7E8;" 
+                                              Foreground="White" 
+                                              FontSize="20"/>
+                                </Border>
+
+                                <!-- App Info -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" 
+                                               FontWeight="SemiBold" 
+                                               FontSize="16"/>
+                                    <TextBlock Text="{Binding ExecutablePath}" 
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               FontSize="12"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding NotificationCount, Converter={StaticResource NotificationCountConverter}}"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                               FontSize="11"/>
+                                </StackPanel>
+
+                                <!-- Notification Status -->
+                                <Border Grid.Column="2" 
+                                        Background="{Binding NotificationsEnabled, Converter={StaticResource StatusColorConverter}}"
+                                        CornerRadius="12"
+                                        Padding="8,4"
+                                        Margin="8,0">
+                                    <TextBlock Text="{Binding NotificationsEnabled, Converter={StaticResource StatusTextConverter}}"
+                                               Foreground="White"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"/>
+                                </Border>
+
+                                <!-- Toggle Button -->
+                                <ToggleSwitch Grid.Column="3" 
+                                              IsOn="{Binding NotificationsEnabled, Mode=TwoWay}"
+                                              OnContent=""
+                                              OffContent=""
+                                              Margin="16,0,0,0"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </ScrollViewer>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="3" 
+                Background="{ThemeResource LayerFillColorAltBrush}" 
+                Padding="20,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0" 
+                           Text="{Binding StatusMessage}"
+                           VerticalAlignment="Center"/>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="{Binding Applications.Count, Converter={StaticResource AppCountConverter}}"
+                               VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    
+                    <Border Background="{Binding IsMonitoring, Converter={StaticResource MonitoringStatusColorConverter}}"
+                            CornerRadius="4"
+                            Padding="6,2">
+                        <TextBlock Text="{Binding IsMonitoring, Converter={StaticResource MonitoringStatusTextConverter}}"
+                                   Foreground="White"
+                                   FontSize="10"/>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
 </Window>
